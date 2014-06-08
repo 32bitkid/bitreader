@@ -2,7 +2,7 @@ package bitreader
 
 import "io"
 
-type Bitreader interface {
+type Bitreader32 interface {
 	Read(uint) uint32
 	ReadBit() bool
 
@@ -12,46 +12,46 @@ type Bitreader interface {
 	Trash(uint)
 }
 
-type bitreader struct {
+type simpleBitreader32 struct {
 	source     io.Reader
 	readBuffer []byte
 	buffer     uint64
 	bitsLeft   uint
 }
 
-func (b *bitreader) Peek(len uint) uint32 {
+func (b *simpleBitreader32) Peek(len uint) uint32 {
 	b.check(len)
 	shift := (64 - len)
 	var mask uint64 = (1 << (len + 1)) - 1
 	return uint32(b.buffer & (mask << shift) >> shift)
 }
 
-func (b *bitreader) Trash(len uint) {
+func (b *simpleBitreader32) Trash(len uint) {
 	b.check(len)
 	b.buffer <<= len
 }
 
-func (b *bitreader) Read(len uint) uint32 {
+func (b *simpleBitreader32) Read(len uint) uint32 {
 	defer b.Trash(len)
 	return b.Peek(len)
 }
 
-func (b *bitreader) PeekBit() bool {
+func (b *simpleBitreader32) PeekBit() bool {
 	return b.Peek(1) == 1
 }
 
-func (b *bitreader) ReadBit() bool {
+func (b *simpleBitreader32) ReadBit() bool {
 	defer b.Trash(1)
 	return b.PeekBit()
 }
 
-func (b *bitreader) check(len uint) {
+func (b *simpleBitreader32) check(len uint) {
 	if b.bitsLeft < len {
 		b.fill()
 	}
 }
 
-func (b *bitreader) fill() {
+func (b *simpleBitreader32) fill() {
 	len, err := b.source.Read(b.readBuffer)
 	if err != nil {
 		panic(err)
@@ -62,6 +62,6 @@ func (b *bitreader) fill() {
 	}
 }
 
-func Create(r io.Reader) Bitreader {
-	return &bitreader{r, make([]byte, 4), 0, 0}
+func Create(r io.Reader) Bitreader32 {
+	return &simpleBitreader32{r, make([]byte, 4), 0, 0}
 }

@@ -4,7 +4,7 @@ import "testing"
 import "bytes"
 import "github.com/32bitkid/bitreader"
 
-func createReader(b ...byte) bitreader.Bitreader {
+func createReader(b ...byte) bitreader.Bitreader32 {
 	return bitreader.Create(bytes.NewReader(b))
 }
 
@@ -44,7 +44,7 @@ func TestTrashingBits(t *testing.T) {
 	}
 }
 
-func check(t *testing.T, br bitreader.Bitreader, len uint, expected uint32) {
+func check(t *testing.T, br bitreader.Bitreader32, len uint, expected uint32) {
 	if actual := br.Read(len); actual != expected {
 		t.Fatalf("Expected %d, got %d", expected, actual)
 	}
