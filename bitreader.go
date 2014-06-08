@@ -4,10 +4,10 @@ import "io"
 
 type Bitreader interface {
 	Read(uint) uint32
-	//	ReadBit() bool
+	ReadBit() bool
 
 	Peek(uint) uint32
-	//	PeekBit() bool
+	PeekBit() bool
 
 	Trash(uint)
 }
@@ -34,6 +34,16 @@ func (b *bitreader) Trash(len uint) {
 func (b *bitreader) Read(len uint) (val uint32) {
 	val = b.Peek(len)
 	b.Trash(len)
+	return
+}
+
+func (b *bitreader) PeekBit() bool {
+	return b.Peek(1) == 1
+}
+
+func (b *bitreader) ReadBit() (val bool) {
+	val = b.PeekBit()
+	b.Trash(1)
 	return
 }
 

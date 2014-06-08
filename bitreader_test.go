@@ -62,3 +62,31 @@ func TestReadingBits(t *testing.T) {
 	check(t, br, 6, 0)
 	check(t, br, 1, 1)
 }
+
+func TestPeekingBools(t *testing.T) {
+	// 01 010 101
+	br := createReader(0125)
+	for i := 0; i < 4; i++ {
+		if br.PeekBit() != false {
+			t.Fatal("Expected false")
+		}
+		br.Trash(1)
+		if br.PeekBit() != true {
+			t.Fatal("Expected true")
+		}
+		br.Trash(1)
+	}
+}
+
+func TestReadingBools(t *testing.T) {
+	// 01 010 101
+	br := createReader(0125)
+	for i := 0; i < 4; i++ {
+		if br.ReadBit() != false {
+			t.Fatal("Expected false")
+		}
+		if br.ReadBit() != true {
+			t.Fatal("Expected true")
+		}
+	}
+}
