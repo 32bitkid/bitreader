@@ -2,14 +2,16 @@ package bitreader
 
 import "io"
 
-type Bitreader32 interface {
-	Read(uint) uint32
+type Bitreader interface {
 	ReadBit() bool
-
-	Peek(uint) uint32
 	PeekBit() bool
-
 	Trash(uint)
+}
+
+type Bitreader32 interface {
+	Bitreader
+	Read(uint) uint32
+	Peek(uint) uint32
 }
 
 type simpleBitreader32 struct {
