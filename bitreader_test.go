@@ -43,3 +43,22 @@ func TestTrashingBits(t *testing.T) {
 		t.Fatal("Expected to read one")
 	}
 }
+
+func check(t *testing.T, br bitreader.Bitreader, len uint, expected uint32) {
+	if actual := br.Read(len); actual != expected {
+		t.Fatalf("Expected %d, got %d", expected, actual)
+	}
+}
+
+func TestReadingBits(t *testing.T) {
+	// 0000 0001 0000 0001 0000 0010 0000 0100
+	br := createReader(1, 1, 2, 4)
+	check(t, br, 7, 0)
+	check(t, br, 1, 1)
+	check(t, br, 7, 0)
+	check(t, br, 1, 1)
+	check(t, br, 6, 0)
+	check(t, br, 1, 1)
+	check(t, br, 6, 0)
+	check(t, br, 1, 1)
+}

@@ -3,7 +3,7 @@ package bitreader
 import "io"
 
 type Bitreader interface {
-	//	Read(uint) uint64
+	Read(uint) uint32
 	//	ReadBit() bool
 
 	Peek(uint) uint32
@@ -13,7 +13,7 @@ type Bitreader interface {
 }
 
 type bitreader struct {
-	io.Reader
+	source     io.Reader
 	readBuffer []byte
 	buffer     uint64
 	bitsLeft   uint
@@ -31,6 +31,12 @@ func (b *bitreader) Trash(len uint) {
 	b.buffer <<= len
 }
 
+func (b *bitreader) Read(len uint) (val uint32) {
+	val = b.Peek(len)
+	b.Trash(len)
+	return
+}
+
 func (b *bitreader) check(len uint) {
 	if b.bitsLeft < len {
 		b.fill()
@@ -38,7 +44,7 @@ func (b *bitreader) check(len uint) {
 }
 
 func (b *bitreader) fill() {
-	len, err := b.Read(b.readBuffer)
+	len, err := b.source.Read(b.readBuffer)
 	if err != nil {
 		panic(err)
 	}
