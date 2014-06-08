@@ -31,20 +31,18 @@ func (b *bitreader) Trash(len uint) {
 	b.buffer <<= len
 }
 
-func (b *bitreader) Read(len uint) (val uint32) {
-	val = b.Peek(len)
-	b.Trash(len)
-	return
+func (b *bitreader) Read(len uint) uint32 {
+	defer b.Trash(len)
+	return b.Peek(len)
 }
 
 func (b *bitreader) PeekBit() bool {
 	return b.Peek(1) == 1
 }
 
-func (b *bitreader) ReadBit() (val bool) {
-	val = b.PeekBit()
-	b.Trash(1)
-	return
+func (b *bitreader) ReadBit() bool {
+	defer b.Trash(1)
+	return b.PeekBit()
 }
 
 func (b *bitreader) check(len uint) {
