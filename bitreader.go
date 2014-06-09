@@ -31,6 +31,7 @@ func (b *simpleBitreader32) Peek(len uint) uint32 {
 func (b *simpleBitreader32) Trash(len uint) {
 	b.check(len)
 	b.buffer <<= len
+	b.bitsLeft -= len
 }
 
 func (b *simpleBitreader32) Read(len uint) uint32 {
