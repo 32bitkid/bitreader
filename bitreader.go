@@ -2,18 +2,18 @@ package bitreader
 
 import "io"
 
-type BitReader interface {
+type Reader interface {
 	ReadBit() bool
 	PeekBit() bool
 	Trash(uint)
 }
 
-type BitReader32 interface {
-	BitReader
+type Reader32 interface {
+	Reader
 	Read32(uint) uint32
 	Peek32(uint) uint32
 }
 
-func NewBitReader32(r io.Reader) BitReader32 {
-	return &simpleBitReader32{r, make([]byte, 4), 0, 0}
+func NewReader32(r io.Reader) Reader32 {
+	return &simpleReader32{r, make([]byte, 4), 0, 0}
 }
