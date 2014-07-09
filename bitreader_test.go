@@ -1,18 +1,25 @@
 package bitreader_test
 
 import "testing"
+import "io"
 import "bytes"
 import "github.com/32bitkid/bitreader"
 
-type read32 func(uint) uint32
+type read32 func(uint) (uint32, error)
 
 func createReader(b ...byte) bitreader.Reader32 {
 	return bitreader.NewReader32(bytes.NewReader(b))
 }
 
 func check32(t *testing.T, fn read32, len uint, expected uint32) {
-	if actual := fn(len); actual != expected {
+	actual, err := fn(len)
+	if err != nil {
+		t.Fatal(err)
+		return
+	}
+	if actual != expected {
 		t.Fatalf("Expected %d, got %d", expected, actual)
+		return
 	}
 }
 
@@ -53,14 +60,22 @@ func TestPeekingBools(t *testing.T) {
 	// 01 010 101
 	br := createReader(0125)
 	for i := 0; i < 4; i++ {
-		if br.PeekBit() != false {
+		val, err := br.PeekBit()
+		if val != false || err != nil {
 			t.Fatal("Expected false")
 		}
-		br.Trash(1)
-		if br.PeekBit() != true {
+		err = br.Trash(1)
+		if err != nil {
+			t.Fatal("Unexpected error")
+		}
+		val, err = br.PeekBit()
+		if val != true || err != nil {
 			t.Fatal("Expected true")
 		}
-		br.Trash(1)
+		err = br.Trash(1)
+		if err != nil {
+			t.Fatal("Unexpected error")
+		}
 	}
 }
 
@@ -68,10 +83,12 @@ func TestReadingBools(t *testing.T) {
 	// 01 010 101
 	br := createReader(0125)
 	for i := 0; i < 4; i++ {
-		if br.ReadBit() != false {
+		val, err := br.ReadBit()
+		if val != false || err != nil {
 			t.Fatal("Expected false")
 		}
-		if br.ReadBit() != true {
+		val, err = br.ReadBit()
+		if val != true || err != nil {
 			t.Fatal("Expected true")
 		}
 	}
@@ -83,5 +100,24 @@ func TestReadingLongStrings(t *testing.T) {
 	for _, val := range data {
 		check32(t, br.Read32, 8, uint32(val))
 	}
+}
 
+func TestRunningEOF(t *testing.T) {
+	br := createReader(0x01)
+	_, err := br.Read32(8)
+	if err != nil && err != io.EOF {
+		t.Fatalf("Expected no error but got %s\n", err)
+	}
+	_, err = br.Peek32(8)
+	if err != io.EOF {
+		t.Fatalf("Expected EOF but got %s\n", err)
+	}
+	_, err = br.Read32(8)
+	if err != io.ErrUnexpectedEOF {
+		t.Fatalf("Expected ErrUnexpectedEOF error but got %s\n", err)
+	}
+	err = br.Trash(8)
+	if err != io.ErrUnexpectedEOF {
+		t.Fatalf("Expected ErrUnexpectedEOF error but got %s\n", err)
+	}
 }

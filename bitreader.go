@@ -3,15 +3,15 @@ package bitreader
 import "io"
 
 type Reader interface {
-	ReadBit() bool
-	PeekBit() bool
-	Trash(uint)
+	ReadBit() (bool, error)
+	PeekBit() (bool, error)
+	Trash(uint) error
 }
 
 type Reader32 interface {
 	Reader
-	Read32(uint) uint32
-	Peek32(uint) uint32
+	Read32(uint) (uint32, error)
+	Peek32(uint) (uint32, error)
 }
 
 func NewReader32(r io.Reader) Reader32 {
