@@ -69,7 +69,7 @@ func (b *simpleReader32) fill(needed uint, isRequired bool) error {
 	}
 
 	if uint(len*8)+b.bitsLeft < needed {
-		return io.ErrUnexpectedEOF
+		return ErrNotAvailable
 	}
 
 	for i := 0; i < len; i++ {

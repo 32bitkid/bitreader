@@ -109,15 +109,15 @@ func TestRunningEOF(t *testing.T) {
 		t.Fatalf("Expected no error but got %s\n", err)
 	}
 	_, err = br.Peek32(8)
-	if err != io.ErrUnexpectedEOF {
-		t.Fatalf("Expected %s but got %s\n", io.ErrUnexpectedEOF, err)
+	if err != bitreader.ErrNotAvailable {
+		t.Fatalf("Expected %s but got %s\n", bitreader.ErrNotAvailable, err)
 	}
 	_, err = br.Read32(8)
-	if err != io.ErrUnexpectedEOF {
-		t.Fatalf("Expected %s error but got %s\n", io.ErrUnexpectedEOF, err)
+	if err != bitreader.ErrNotAvailable {
+		t.Fatalf("Expected %s error but got %s\n", bitreader.ErrNotAvailable, err)
 	}
 	err = br.Trash(8)
-	if err != io.ErrUnexpectedEOF {
-		t.Fatalf("Expected %s error but got %s\n", io.ErrUnexpectedEOF, err)
+	if err != bitreader.ErrNotAvailable {
+		t.Fatalf("Expected %s error but got %s\n", bitreader.ErrNotAvailable, err)
 	}
 }

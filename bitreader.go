@@ -1,6 +1,7 @@
 package bitreader
 
 import "io"
+import "errors"
 
 type Reader interface {
 	ReadBit() (bool, error)
@@ -17,3 +18,5 @@ type Reader32 interface {
 func NewReader32(r io.Reader) Reader32 {
 	return &simpleReader32{r, make([]byte, 4), 0, 0}
 }
+
+var ErrNotAvailable = errors.New("not available")
