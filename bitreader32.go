@@ -10,7 +10,7 @@ type simpleReader32 struct {
 }
 
 func (b *simpleReader32) Peek32(len uint) (uint32, error) {
-	err := b.check(len, false)
+	err := b.check(len)
 	if err != nil && err != io.EOF {
 		return 0, err
 	}
@@ -21,7 +21,7 @@ func (b *simpleReader32) Peek32(len uint) (uint32, error) {
 }
 
 func (b *simpleReader32) Trash(len uint) error {
-	err := b.check(len, true)
+	err := b.check(len)
 	if err != nil && err != io.EOF {
 		return err
 	}
@@ -53,14 +53,14 @@ func (b *simpleReader32) ReadBit() (bool, error) {
 	return val, err
 }
 
-func (b *simpleReader32) check(len uint, isRequired bool) error {
+func (b *simpleReader32) check(len uint) error {
 	if b.bitsLeft < len {
-		return b.fill(len, isRequired)
+		return b.fill(len)
 	}
 	return nil
 }
 
-func (b *simpleReader32) fill(needed uint, isRequired bool) error {
+func (b *simpleReader32) fill(needed uint) error {
 	neededBytes := int((needed - b.bitsLeft + 7) >> 3)
 	len, err := io.ReadAtLeast(b.source, b.readBuffer, neededBytes)
 
