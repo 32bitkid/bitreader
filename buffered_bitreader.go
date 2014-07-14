@@ -83,3 +83,8 @@ func (wbr *bufferedBitreader) ReadBit() (val bool, err error) {
 	}
 	return
 }
+
+func (wbr *bufferedBitreader) Read(p []byte) (n int, err error) {
+	n, err = wbr.reader.Read(p)
+	return
+}

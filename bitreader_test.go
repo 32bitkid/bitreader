@@ -121,3 +121,55 @@ func TestRunningEOF(t *testing.T) {
 		t.Fatalf("Expected %s error but got %s\n", bitreader.ErrNotAvailable, err)
 	}
 }
+
+func TestBasicReading(t *testing.T) {
+	data := []byte{1, 2, 3, 4, 5, 6, 7, 8, 9, 10}
+	br := createReader(data...)
+
+	buffer := make([]byte, 5)
+	_, err := io.ReadAtLeast(br, buffer, 5)
+
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if !bytes.Equal(buffer, data[:5]) {
+		t.Fatalf("Expected %+v to equal %+v", buffer, data[:5])
+	}
+}
+
+func TestReadingAfterBitOperation(t *testing.T) {
+	data := []byte{1, 2, 3, 4, 5, 6, 7, 8, 9, 10}
+	br := createReader(data...)
+
+	br.Trash(8)
+
+	buffer := make([]byte, 5)
+	_, err := io.ReadAtLeast(br, buffer, 5)
+
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if !bytes.Equal(buffer, data[1:6]) {
+		t.Fatalf("Expected %+v to equal %+v", buffer, data[1:6])
+	}
+}
+
+func TestRealignmentReading(t *testing.T) {
+	data := []byte{1, 2, 3, 4, 5, 6, 7, 8, 9, 10}
+	br := createReader(data...)
+
+	br.Trash(20)
+
+	buffer := make([]byte, 5)
+	_, err := io.ReadAtLeast(br, buffer, 5)
+
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if !bytes.Equal(buffer, data[3:8]) {
+		t.Fatalf("Expected %+v to equal %+v", buffer, data[3:8])
+	}
+}

@@ -7,6 +7,7 @@ type Reader interface {
 	ReadBit() (bool, error)
 	PeekBit() (bool, error)
 	Trash(uint) error
+	io.Reader
 }
 
 type Reader32 interface {

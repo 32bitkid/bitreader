@@ -79,3 +79,18 @@ func (b *simpleReader32) fill(needed uint) error {
 
 	return err
 }
+
+func (b *simpleReader32) Read(p []byte) (n int, err error) {
+	b.Trash(b.bitsLeft % 8)
+	bytes := int((b.bitsLeft + 7) >> 3)
+	for i := 0; i < bytes; i++ {
+		val, err := b.Read32(8)
+		if err != nil {
+			return i, err
+		}
+		p[i] = byte(val)
+	}
+	n, err = b.source.Read(p[bytes:])
+	n += bytes
+	return
+}
