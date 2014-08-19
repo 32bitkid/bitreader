@@ -1,15 +1,8 @@
 package bitreader
 
-import "io"
 import "bytes"
 
-type BufferedBitreader interface {
-	Reader32
-	Len() int
-	io.Writer
-}
-
-type bufferedBitreader struct {
+type bufferedReader32 struct {
 	reader Reader32
 	buffer *bytes.Buffer
 	sync   chan interface{}
@@ -17,14 +10,14 @@ type bufferedBitreader struct {
 
 var goToken = struct{}{}
 
-func NewBufferedBitreader() BufferedBitreader {
+func NewBufferedReader32(newReader32Fn NewReader32Fn) BufferedReader32 {
 	buffer := &bytes.Buffer{}
-	reader := NewReader32(buffer)
+	reader := newReader32Fn(buffer)
 	sync := make(chan interface{}, 1)
-	return &bufferedBitreader{reader, buffer, sync}
+	return &bufferedReader32{reader, buffer, sync}
 }
 
-func (wbr *bufferedBitreader) Write(data []byte) (n int, err error) {
+func (wbr *bufferedReader32) Write(data []byte) (n int, err error) {
 	n, err = wbr.buffer.Write(data)
 	select {
 	case <-wbr.sync:
@@ -35,11 +28,11 @@ func (wbr *bufferedBitreader) Write(data []byte) (n int, err error) {
 	return
 }
 
-func (wbr *bufferedBitreader) Len() int {
+func (wbr *bufferedReader32) Len() int {
 	return wbr.buffer.Len()
 }
 
-func (wbr *bufferedBitreader) Trash(len uint) (err error) {
+func (wbr *bufferedReader32) Trash(len uint) (err error) {
 	err = wbr.reader.Trash(len)
 	if err == ErrNotAvailable {
 		<-wbr.sync
@@ -48,7 +41,7 @@ func (wbr *bufferedBitreader) Trash(len uint) (err error) {
 	return
 }
 
-func (wbr *bufferedBitreader) Peek32(len uint) (val uint32, err error) {
+func (wbr *bufferedReader32) Peek32(len uint) (val uint32, err error) {
 	val, err = wbr.reader.Peek32(len)
 	if err == ErrNotAvailable {
 		<-wbr.sync
@@ -57,7 +50,7 @@ func (wbr *bufferedBitreader) Peek32(len uint) (val uint32, err error) {
 	return
 }
 
-func (wbr *bufferedBitreader) Read32(len uint) (val uint32, err error) {
+func (wbr *bufferedReader32) Read32(len uint) (val uint32, err error) {
 	val, err = wbr.reader.Read32(len)
 	if err == ErrNotAvailable {
 		<-wbr.sync
@@ -66,7 +59,7 @@ func (wbr *bufferedBitreader) Read32(len uint) (val uint32, err error) {
 	return
 }
 
-func (wbr *bufferedBitreader) PeekBit() (val bool, err error) {
+func (wbr *bufferedReader32) PeekBit() (val bool, err error) {
 	val, err = wbr.reader.PeekBit()
 	if err == ErrNotAvailable {
 		<-wbr.sync
@@ -75,7 +68,7 @@ func (wbr *bufferedBitreader) PeekBit() (val bool, err error) {
 	return
 }
 
-func (wbr *bufferedBitreader) ReadBit() (val bool, err error) {
+func (wbr *bufferedReader32) ReadBit() (val bool, err error) {
 	val, err = wbr.reader.ReadBit()
 	if err == ErrNotAvailable {
 		<-wbr.sync
@@ -84,7 +77,7 @@ func (wbr *bufferedBitreader) ReadBit() (val bool, err error) {
 	return
 }
 
-func (wbr *bufferedBitreader) Read(p []byte) (n int, err error) {
+func (wbr *bufferedReader32) Read(p []byte) (n int, err error) {
 	n, err = wbr.reader.Read(p)
 	return
 }

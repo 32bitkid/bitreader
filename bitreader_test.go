@@ -8,7 +8,7 @@ import "github.com/32bitkid/bitreader"
 type read32 func(uint) (uint32, error)
 
 func createReader(b ...byte) bitreader.Reader32 {
-	return bitreader.NewReader32(bytes.NewReader(b))
+	return bitreader.NewSimpleReader32(bytes.NewReader(b))
 }
 
 func check32(t *testing.T, fn read32, len uint, expected uint32) {

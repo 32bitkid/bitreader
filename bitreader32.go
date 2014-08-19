@@ -9,6 +9,10 @@ type simpleReader32 struct {
 	bitsLeft   uint
 }
 
+func NewSimpleReader32(r io.Reader) Reader32 {
+	return &simpleReader32{r, make([]byte, 4), 0, 0}
+}
+
 func (b *simpleReader32) Peek32(len uint) (uint32, error) {
 	err := b.check(len)
 	if err != nil && err != io.EOF {
