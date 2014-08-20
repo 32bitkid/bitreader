@@ -81,3 +81,7 @@ func (wbr *bufferedReader32) Read(p []byte) (n int, err error) {
 	n, err = wbr.reader.Read(p)
 	return
 }
+
+func (wbr *bufferedReader32) IsByteAligned() bool {
+	return wbr.reader.IsByteAligned()
+}

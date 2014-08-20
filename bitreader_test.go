@@ -173,3 +173,23 @@ func TestRealignmentReading(t *testing.T) {
 		t.Fatalf("Expected %+v to equal %+v", buffer, data[3:8])
 	}
 }
+
+func TestByteAlignment(t *testing.T) {
+	br := createReader(0, 255, 0, 0, 0)
+	if br.IsByteAligned() != true {
+		t.Fail()
+	}
+	br.Trash(1)
+	if br.IsByteAligned() != false {
+		t.Fail()
+	}
+
+	for !br.IsByteAligned() {
+		br.Trash(1)
+	}
+
+	if val, err := br.PeekBit(); val != true || err != nil {
+		t.Fail()
+	}
+
+}

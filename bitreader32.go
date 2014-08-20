@@ -98,3 +98,7 @@ func (b *simpleReader32) Read(p []byte) (n int, err error) {
 	n += bytes
 	return
 }
+
+func (b *simpleReader32) IsByteAligned() bool {
+	return b.bitsLeft%8 == 0
+}

@@ -7,6 +7,7 @@ type Reader interface {
 	ReadBit() (bool, error)
 	PeekBit() (bool, error)
 	Trash(uint) error
+	IsByteAligned() bool
 	io.Reader
 }
 
