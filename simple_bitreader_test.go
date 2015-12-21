@@ -7,8 +7,8 @@ import "github.com/32bitkid/bitreader"
 
 type read32 func(uint) (uint32, error)
 
-func createReader(b ...byte) bitreader.Reader32 {
-	return bitreader.NewSimpleReader32(bytes.NewReader(b))
+func createReader(b ...byte) bitreader.BitReader {
+	return bitreader.NewBitReader(bytes.NewReader(b))
 }
 
 func check32(t *testing.T, fn read32, len uint, expected uint32) {
@@ -102,23 +102,54 @@ func TestReadingLongStrings(t *testing.T) {
 	}
 }
 
-func TestRunningEOF(t *testing.T) {
+func TestPeekEOF(t *testing.T) {
 	br := createReader(0x01)
+	br.Trash(8)
+	_, err := br.Peek32(8)
+	if err != io.EOF {
+		t.Fatalf("Expected %s but got %s\n", io.EOF, err)
+	}
+}
+
+func TestReadEOF(t *testing.T) {
+	br := createReader(0x01)
+	br.Trash(8)
 	_, err := br.Read32(8)
-	if err != nil && err != io.EOF {
-		t.Fatalf("Expected no error but got %s\n", err)
+	if err != io.ErrUnexpectedEOF {
+		t.Fatalf("Expected %s error but got %s\n", io.EOF, err)
 	}
-	_, err = br.Peek32(8)
-	if err != bitreader.ErrNotAvailable {
-		t.Fatalf("Expected %s but got %s\n", bitreader.ErrNotAvailable, err)
+}
+
+func TestTrashEOF(t *testing.T) {
+	br := createReader(0x01)
+	br.Trash(8)
+	err := br.Trash(8)
+	if err != io.ErrUnexpectedEOF {
+		t.Fatalf("Expected %s error but got %s\n", io.EOF, err)
 	}
-	_, err = br.Read32(8)
-	if err != bitreader.ErrNotAvailable {
-		t.Fatalf("Expected %s error but got %s\n", bitreader.ErrNotAvailable, err)
+}
+
+func TestPeekUnexpectedEOF(t *testing.T) {
+	br := createReader(0x01)
+	_, err := br.Peek32(32)
+	if err != io.ErrUnexpectedEOF {
+		t.Fatalf("Expected %s but got %s\n", io.ErrUnexpectedEOF, err)
 	}
-	err = br.Trash(8)
-	if err != bitreader.ErrNotAvailable {
-		t.Fatalf("Expected %s error but got %s\n", bitreader.ErrNotAvailable, err)
+}
+
+func TestReadUnexpectedEOF(t *testing.T) {
+	br := createReader(0x01)
+	_, err := br.Read32(32)
+	if err != io.ErrUnexpectedEOF {
+		t.Fatalf("Expected %s error but got %s\n", io.ErrUnexpectedEOF, err)
+	}
+}
+
+func TestTrashUnexpectedEOF(t *testing.T) {
+	br := createReader(0x01)
+	err := br.Trash(32)
+	if err != io.ErrUnexpectedEOF {
+		t.Fatalf("Expected %s error but got %s\n", io.ErrUnexpectedEOF, err)
 	}
 }
 
