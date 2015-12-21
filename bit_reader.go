@@ -1,3 +1,5 @@
+// Package bitreader provides basic interfaces to read and traverse
+// an io.Reader as a stream of bits, rather than a stream of bytes.
 package bitreader
 
 import "io"

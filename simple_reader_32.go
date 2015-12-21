@@ -3,7 +3,7 @@ package bitreader
 import "io"
 
 // NewSimpleBitReader returns a naïve BitReader implementation that has
-// few optimizations
+// few optimizations.
 func NewSimpleBitReader(r io.Reader) *simpleReader32 {
 	return &simpleReader32{r, make([]byte, 4), 0, 0}
 }
