@@ -2,7 +2,7 @@
 
 Provides basic interfaces to read and traverse an `io.Reader` as a stream of bits, rather than a stream of bytes.
 
-See the [documentation](https://godoc.org/github.com/32bitkid/bitreader).
+[![GoDoc](https://godoc.org/github.com/32bitkid/bitreader?status.svg)](https://godoc.org/github.com/32bitkid/bitreader)
 
 ## Installation
 
