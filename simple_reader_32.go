@@ -74,8 +74,8 @@ func (b *simpleReader32) check(bits uint) error {
 
 func (b *simpleReader32) fill(needed uint) error {
 	neededBytes := int((needed - b.bitsLeft + 7) >> 3)
-	n, err := io.ReadAtLeast(b.source, b.readBuffer, neededBytes)
-
+	b.readBuffer = make([]byte, neededBytes)
+	n, err := io.ReadFull(b.source, b.readBuffer)
 	if err != nil {
 		return err
 	}
