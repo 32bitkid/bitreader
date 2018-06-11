@@ -6,9 +6,10 @@ import "bytes"
 import "github.com/32bitkid/bitreader"
 
 type read32 func(uint) (uint32, error)
+type read64 func(uint) (uint64, error)
 
 func createReader(b ...byte) bitreader.BitReader {
-	return bitreader.NewBitReader(bytes.NewReader(b))
+	return bitreader.NewReader(bytes.NewReader(b))
 }
 
 func check32(t *testing.T, fn read32, len uint, expected uint32) {
@@ -23,23 +24,49 @@ func check32(t *testing.T, fn read32, len uint, expected uint32) {
 	}
 }
 
+func check64(t *testing.T, fn read64, len uint, expected uint64) {
+	actual, err := fn(len)
+	if err != nil {
+		t.Fatal(err)
+		return
+	}
+	if actual != expected {
+		t.Fatalf("Expected %d, got %d", expected, actual)
+		return
+	}
+}
+
 func TestPeekingForZero(t *testing.T) {
 	br := createReader(0, 0, 0, 0, 0, 0, 0, 0)
-	for i := uint(1); i < 64; i++ {
+	for i := uint(1); i < 32; i++ {
 		check32(t, br.Peek32, i, 0)
 	}
 }
 
 func TestPeekingForOne(t *testing.T) {
 	br := createReader(255, 255, 255, 255, 255, 255, 255, 255)
+	for i := uint(1); i < 32; i++ {
+		check32(t, br.Peek32, i, ^uint32(0)>>(32-i))
+	}
+}
+
+func TestPeekingFor64Zero(t *testing.T) {
+	br := createReader(0, 0, 0, 0, 0, 0, 0, 0)
 	for i := uint(1); i < 64; i++ {
-		check32(t, br.Peek32, i, uint32(1<<i-1))
+		check64(t, br.Peek64, i, 0)
+	}
+}
+
+func TestPeekingFor64One(t *testing.T) {
+	br := createReader(255, 255, 255, 255, 255, 255, 255, 255)
+	for i := uint(1); i < 64; i++ {
+		check64(t, br.Peek64, i, ^uint64(0)>>(64-i))
 	}
 }
 
 func TestTrashingBits(t *testing.T) {
 	br := createReader(1)
-	br.Trash(7)
+	br.Skip(7)
 	check32(t, br.Peek32, 1, 1)
 }
 
@@ -60,19 +87,19 @@ func TestPeekingBools(t *testing.T) {
 	// 01 010 101
 	br := createReader(0125)
 	for i := 0; i < 4; i++ {
-		val, err := br.PeekBit()
+		val, err := br.Peek1()
 		if val != false || err != nil {
 			t.Fatal("Expected false")
 		}
-		err = br.Trash(1)
+		err = br.Skip(1)
 		if err != nil {
 			t.Fatal("Unexpected error")
 		}
-		val, err = br.PeekBit()
+		val, err = br.Peek1()
 		if val != true || err != nil {
 			t.Fatal("Expected true")
 		}
-		err = br.Trash(1)
+		err = br.Skip(1)
 		if err != nil {
 			t.Fatal("Unexpected error")
 		}
@@ -83,11 +110,11 @@ func TestReadingBools(t *testing.T) {
 	// 01 010 101
 	br := createReader(0125)
 	for i := 0; i < 4; i++ {
-		val, err := br.ReadBit()
+		val, err := br.Read1()
 		if val != false || err != nil {
 			t.Fatal("Expected false")
 		}
-		val, err = br.ReadBit()
+		val, err = br.Read1()
 		if val != true || err != nil {
 			t.Fatal("Expected true")
 		}
@@ -104,7 +131,7 @@ func TestReadingLongStrings(t *testing.T) {
 
 func TestPeekEOF(t *testing.T) {
 	br := createReader(0x01)
-	br.Trash(8)
+	br.Skip(8)
 	_, err := br.Peek32(8)
 	if err != io.EOF {
 		t.Fatalf("Expected %s but got %s\n", io.EOF, err)
@@ -113,27 +140,19 @@ func TestPeekEOF(t *testing.T) {
 
 func TestReadEOF(t *testing.T) {
 	br := createReader(0x01)
-	br.Trash(8)
+	br.Skip(8)
 	_, err := br.Read32(8)
 	if err != io.ErrUnexpectedEOF {
-		t.Fatalf("Expected %s error but got %s\n", io.EOF, err)
+		t.Fatalf("Expected %s error but got %s\n", io.ErrUnexpectedEOF, err)
 	}
 }
 
 func TestTrashEOF(t *testing.T) {
 	br := createReader(0x01)
-	br.Trash(8)
-	err := br.Trash(8)
+	br.Skip(8)
+	err := br.Skip(8)
 	if err != io.ErrUnexpectedEOF {
-		t.Fatalf("Expected %s error but got %s\n", io.EOF, err)
-	}
-}
-
-func TestPeekUnexpectedEOF(t *testing.T) {
-	br := createReader(0x01)
-	_, err := br.Peek32(32)
-	if err != io.ErrUnexpectedEOF {
-		t.Fatalf("Expected %s but got %s\n", io.ErrUnexpectedEOF, err)
+		t.Fatalf("Expected %s error but got %s\n", io.ErrUnexpectedEOF, err)
 	}
 }
 
@@ -147,7 +166,7 @@ func TestReadUnexpectedEOF(t *testing.T) {
 
 func TestTrashUnexpectedEOF(t *testing.T) {
 	br := createReader(0x01)
-	err := br.Trash(32)
+	err := br.Skip(32)
 	if err != io.ErrUnexpectedEOF {
 		t.Fatalf("Expected %s error but got %s\n", io.ErrUnexpectedEOF, err)
 	}
@@ -173,7 +192,7 @@ func TestReadingAfterBitOperation(t *testing.T) {
 	data := []byte{1, 2, 3, 4, 5, 6, 7, 8, 9, 10}
 	br := createReader(data...)
 
-	br.Trash(8)
+	br.Skip(8)
 
 	buffer := make([]byte, 5)
 	_, err := io.ReadAtLeast(br, buffer, 5)
@@ -191,7 +210,7 @@ func TestRealignmentReading(t *testing.T) {
 	data := []byte{1, 2, 3, 4, 5, 6, 7, 8, 9, 10}
 	br := createReader(data...)
 
-	br.Trash(20)
+	br.Skip(20)
 
 	buffer := make([]byte, 5)
 	_, err := io.ReadAtLeast(br, buffer, 5)
@@ -207,19 +226,19 @@ func TestRealignmentReading(t *testing.T) {
 
 func TestByteAlignment(t *testing.T) {
 	br := createReader(0, 255, 0, 0, 0)
-	if br.IsByteAligned() != true {
+	if br.IsAligned() != true {
 		t.Fail()
 	}
-	br.Trash(1)
-	if br.IsByteAligned() != false {
+	br.Skip(1)
+	if br.IsAligned() != false {
 		t.Fail()
 	}
 
-	for !br.IsByteAligned() {
-		br.Trash(1)
+	for !br.IsAligned() {
+		br.Skip(1)
 	}
 
-	if val, err := br.PeekBit(); val != true || err != nil {
+	if val, err := br.Peek1(); val != true || err != nil {
 		t.Fail()
 	}
 

@@ -15,18 +15,27 @@ $ go get github.com/32bitkid/bitreader
 Ever wanted to count the number of 0 bits from the start of a file?
 
 ```go
+package main
 
-file, _ := os.Open("file")
-br := bitreader.NewBitReader(file)
-n := 0
-for {
-    val, err := br.ReadBit()
-    if err != nil || val == true {
-        break
+import (
+	"os"
+	"fmt"
+	"github.com/32bitkid/bitreader"
+)
+
+func main() {
+    file, _ := os.Open("file")
+    r := bitreader.NewReader(file)
+    n := 0
+    for {
+        val, err := r.Read1()
+        if err != nil || val == true {
+            break
+        }
+        n += 1
     }
-    n += 1
+    fmt.Printf("The file starts with %d off bits", n)
 }
-fmt.Printf("The file starts with %d off bits", n)
 ```
 
 But seriously, this is used for parsing densely packed binary formats where data may not be byte aligned. For example, decoding values packed with [Huffman Coding](https://en.wikipedia.org/wiki/Huffman_coding).
