@@ -1,9 +1,12 @@
 package bitreader_test
 
-import "testing"
-import "io"
-import "bytes"
-import "github.com/32bitkid/bitreader"
+import (
+	"bytes"
+	"io"
+	"testing"
+
+	"github.com/32bitkid/bitreader"
+)
 
 type read32 func(uint) (uint32, error)
 type read64 func(uint) (uint64, error)
