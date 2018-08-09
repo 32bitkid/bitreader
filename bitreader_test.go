@@ -5,7 +5,7 @@ import (
 	"io"
 	"testing"
 
-	"github.com/32bitkid/bitreader"
+	"github.com/ysh86/bitreader"
 )
 
 type read32 func(uint) (uint32, error)
@@ -141,10 +141,28 @@ func TestPeekEOF(t *testing.T) {
 	}
 }
 
+func TestPeek1EOF(t *testing.T) {
+	br := createReader(0x01)
+	br.Skip(8)
+	_, err := br.Peek1()
+	if err != io.EOF {
+		t.Fatalf("Expected %s but got %s\n", io.EOF, err)
+	}
+}
+
 func TestReadEOF(t *testing.T) {
 	br := createReader(0x01)
 	br.Skip(8)
 	_, err := br.Read32(8)
+	if err != io.ErrUnexpectedEOF {
+		t.Fatalf("Expected %s error but got %s\n", io.ErrUnexpectedEOF, err)
+	}
+}
+
+func TestRead1EOF(t *testing.T) {
+	br := createReader(0x01)
+	br.Skip(8)
+	_, err := br.Read1()
 	if err != io.ErrUnexpectedEOF {
 		t.Fatalf("Expected %s error but got %s\n", io.ErrUnexpectedEOF, err)
 	}
@@ -159,9 +177,25 @@ func TestTrashEOF(t *testing.T) {
 	}
 }
 
-func TestReadUnexpectedEOF(t *testing.T) {
+func TestRead16UnexpectedEOF(t *testing.T) {
+	br := createReader(0x01)
+	_, err := br.Read16(16)
+	if err != io.ErrUnexpectedEOF {
+		t.Fatalf("Expected %s error but got %s\n", io.ErrUnexpectedEOF, err)
+	}
+}
+
+func TestRead32UnexpectedEOF(t *testing.T) {
 	br := createReader(0x01)
 	_, err := br.Read32(32)
+	if err != io.ErrUnexpectedEOF {
+		t.Fatalf("Expected %s error but got %s\n", io.ErrUnexpectedEOF, err)
+	}
+}
+
+func TestRead64UnexpectedEOF(t *testing.T) {
+	br := createReader(0x01)
+	_, err := br.Read64(64)
 	if err != io.ErrUnexpectedEOF {
 		t.Fatalf("Expected %s error but got %s\n", io.ErrUnexpectedEOF, err)
 	}
@@ -224,6 +258,66 @@ func TestRealignmentReading(t *testing.T) {
 
 	if !bytes.Equal(buffer, data[3:8]) {
 		t.Fatalf("Expected %+v to equal %+v", buffer, data[3:8])
+	}
+}
+
+func TestReadingAfterPeeking(t *testing.T) {
+	data := []byte{1, 2, 3, 4, 5, 6, 7, 8, 9, 10}
+	br := createReader(data...)
+	buffer := make([]byte, 3)
+
+	// 1
+	_, err := br.Peek1()
+	if err != nil {
+		t.Fatal(err)
+	}
+	_, err = br.Peek8(7)
+	if err != nil {
+		t.Fatal(err)
+	}
+	_, err = br.Peek8(3)
+	if err != nil {
+		t.Fatal(err)
+	}
+	_, err = br.Peek16(13)
+	if err != nil {
+		t.Fatal(err)
+	}
+	_, err = br.Peek8(8)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	n, err := io.ReadAtLeast(br, buffer, 3)
+
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if n != 3 {
+		t.Fatalf("Expected %+v to equal %+v", n, 3)
+	}
+	if !bytes.Equal(buffer, data[0:3]) {
+		t.Fatalf("Expected %+v to equal %+v", buffer, data[0:3])
+	}
+
+	// 2
+	_, err = br.Peek64(49)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	n, err = io.ReadAtLeast(br, buffer, 3)
+
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if n != 3 {
+		t.Fatalf("Expected %+v to equal %+v", n, 3)
+	}
+	if !bytes.Equal(buffer, data[3:6]) {
+		t.Fatalf("Expected %+v to equal %+v", buffer, data[3:6])
 	}
 }
 

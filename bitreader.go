@@ -191,7 +191,7 @@ func (br *bitreader) Align() (n uint, err error) {
 func (br *bitreader) Read1() (bool, error) {
 	val, err := br.Peek1()
 	if err != nil {
-		return false, nil
+		return false, checkEOF(err)
 	}
 	return val, br.skip(1)
 }
@@ -242,7 +242,7 @@ func (br *bitreader) Peek8(n uint) (uint8, error) {
 }
 
 func (br *bitreader) Peek16(n uint) (uint16, error) {
-	if n > 8 {
+	if n > 16 {
 		return 0, errors.New("overflow")
 	}
 	val, err := br.peek(n)
